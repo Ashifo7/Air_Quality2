@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BreatheSafe - Air Quality Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            z-index: 1;
+            background: url('{{ url_for('static', filename='bg.png') }}') no-repeat center center/cover;
+            padding: 20px;
+        }
+        .hero-section h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .hero-section p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            max-width: 800px;
+        }
+        .hero-section a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ff004f;
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.2em;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .hero-section a:hover {
+            background-color: #c7003f;
+        }
+        .content-section {
+            padding: 60px 20px;
+            background: #000;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #333;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            border-radius: 10px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 2em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        select:hover, button:hover {
+            border-color: #ff004f;
+            box-shadow: 0 0 5px rgba(255, 0, 79, 0.5);
+        }
+        button {
+            background-color: #ff004f;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        button:hover {
+            background-color: #c7003f;
+            transform: scale(1.05);
+        }
+        .pollutant-box {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .pollutant-box p {
+            margin: 0;
+        }
+        #plotImage {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #fff;
+            font-size: 1.2em;
+        }
+.card {
+    background-color: #000; /* Black background before hover */
+    border-radius: 8px;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    transform: perspective(1000px) rotateY(0deg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.card:hover {
+    background-color: #ff004f; /* Background color on hover */
+    transform: perspective(1000px) rotateY(10deg) translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+}
+
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5em;
+            }
+            .hero-section p {
+                font-size: 1em;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+        }
+        @media (max-width: 480px) {
+            .hero-section h1 {
+                font-size: 2em;
+            }
+            .hero-section p {
+                font-size: 0.9em;
+            }
+            h2 {
+                font-size: 1.2em;
+            }
+        }
+        /* New styles for the pollutant cards */
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .card {
+            background: #444;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 350px;
+            padding: 20px;
+        }
+        .card-header {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .card-body h5 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .card-body p {
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <h1>Welcome to BreatheSafe</h1>
+        <p>Monitor the air quality in different cities and take necessary precautions to stay safe. Check pollution levels, view pollutant trends, and stay informed.</p>
+        <a href="#form-section">Get Started</a>
+        <a href="#pollutants-section" style="margin-left: 10px;">Learn More About Pollutants</a> <!-- Updated button to link to the new section -->
+    </div>
+
+    <div id="form-section" class="content-section">
+        <h2>Check Pollution Levels</h2>
+        <div class="container">
+            <div class="form-group">
+                <label for="state">Select State:</label>
+                <select id="state">
+                    <option value="">-- Select State --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="city">Select City:</label>
+                <select id="city" disabled>
+                    <option value="">-- Select City --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="pollutant">Select Pollutant:</label>
+                <select id="pollutant">
+                    <option value="PM10">PM10</option>
+                    <option value="PM2.5">PM2.5</option>
+                    <option value="NO2">NO2</option>
+                    <option value="NH3">NH3</option>
+                    <option value="SO2">SO2</option>
+                    <option value="CO">CO</option>
+                    <option value="O3">O3</option>
+                </select>
+            </div>
+
+            <button id="checkPollutionBtn">Check Pollution</button>
+            <button id="plotAQIBtn">Plot AQI</button>
+            <button id="plotPollutantLevelsBtn">Plot Pollutant Levels</button>
+
+            <div class="loading" id="loading">Loading...</div>
+            <div id="result" class="pollutant-box"></div>
+            <div id="plot">
+                <img id="plotImage" src="" alt="Plot Image" style="display:none;">
+            </div>
+        </div>
+    </div>
+
+    <div id="pollutants-section" class="content-section">
+        <div class="container mt-5">
+            <h1 class="heading">Effects of Air Pollutants Exceeding Safe Levels</h1>
+
+            <div class="card-container">
+                <!-- PM10 Card -->
+                <div class="card">
+                    <div class="card-header">
+                        PM10
+                    </div>
+                    <div class="card-body">
+                        <h5>Health Effects</h5>
+                        <p>Can penetrate the respiratory system, causing respiratory issues like coughing, asthma, and bronchitis. Chronic exposure can lead to lung cancer, cardiovascular diseases, and premature death.</p>
+                        <h5>Environmental Effects</h5>
+                        <p>Reduced visibility, damage to crops, and acid rain.</p>
+                    </div>
+                </div>
+
+                <!-- PM2.5 Card -->
+                <div class="card">
+                    <div class="card-header">
+                        PM2.5
+                    </div>
+                    <div class="card-body">
+                        <h5>Health Effects</h5>
+                        <p>Can reach the lungs and enter the bloodstream, leading to severe respiratory and cardiovascular diseases, including heart attacks and strokes. It is more harmful than PM10 due to its smaller size.</p>
+                                                <h5>Environmental Effects</h5>
+                        <p>Similar to PM10, with more pronounced impacts due to its finer particles.</p>
+                    </div>
+                </div>
+
+                <!-- NO2 Card -->
+                <div class="card">
+                    <div class="card-header">
+                        NO2
+                    </div>
+                    <div class="card-body">
+                        <h5>Health Effects</h5>
+                        <p>Irritation of the respiratory system, reduced lung function, exacerbation of asthma, and increased susceptibility to respiratory infections. Long-term exposure may decrease lung growth in children.</p>
+                        <h5>Environmental Effects</h5>
+                        <p>Contributes to the formation of ground-level ozone and acid rain, which can harm ecosystems, vegetation, and water bodies.</p>
+                    </div>
+                </div>
+
+                <!-- NH3 Card -->
+                <div class="card">
+                    <div class="card-header">
+                        NH3
+                    </div>
+                    <div class="card-body">
+                        <h5>Health Effects</h5>
+                        <p>Can cause irritation of the eyes, nose, and throat. High concentrations may lead to respiratory distress and damage to the mucous membranes.</p>
+                        <h5>Environmental Effects</h5>
+                        <p>Contributes to nutrient pollution in water bodies, leading to eutrophication and harm to aquatic life.</p>
+                    </div>
+                </div>
+
+                <!-- SO2 Card -->
+                <div class="card">
+                    <div class="card-header">
+                        SO2
+                    </div>
+                    <div class="card-body">
+                        <h5>Health Effects</h5>
+                        <p>Can cause respiratory symptoms, such as coughing and shortness of breath. High levels can lead to aggravation of asthma and other lung diseases.</p>
+                        <h5>Environmental Effects</h5>
+                        <p>Major contributor to acid rain, which can damage ecosystems, soil, and buildings.</p>
+                    </div>
+                </div>
+
+                <!-- CO Card -->
+                <div class="card">
+                    <div class="card-header">
+                        CO
+                    </div>
+                    <div class="card-body">
+                        <h5>Health Effects</h5>
+                        <p>Binds with hemoglobin in the blood, reducing oxygen transport. Can cause symptoms like headaches, dizziness, nausea, and in severe cases, can lead to unconsciousness or death.</p>
+                        <h5>Environmental Effects</h5>
+                        <p>Contributes to ground-level ozone formation and greenhouse gas effects.</p>
+                    </div>
+                </div>
+
+                <!-- O3 Card -->
+                <div class="card">
+                    <div class="card-header">
+                        O3
+                    </div>
+                    <div class="card-body">
+                        <h5>Health Effects</h5>
+                        <p>Causes respiratory problems, such as chest pain, coughing, throat irritation, and airway inflammation. Long-term exposure can decrease lung function and aggravate respiratory diseases like asthma.</p>
+                        <h5>Environmental Effects</h5>
+                        <p>Damages crops, trees, and other vegetation. Contributes to the greenhouse effect and climate change.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Load states on page load
+            $.ajax({
+                url: "/states",
+                method: "GET",
+                success: function (data) {
+                    if (Array.isArray(data)) {
+                        $('#state').append(data.map(state => `<option value="${state}">${state}</option>`));
+                    } else {
+                        console.error("Unexpected data format for states:", data);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error fetching states:", status, error);
+                }
+            });
+
+            // Load cities when a state is selected
+            $('#state').change(function () {
+                let state = $(this).val();
+                if (state) {
+                    $.ajax({
+                        url: "/cities",
+                        method: "GET",
+                        data: { state: state },
+                        success: function (data) {
+                            if (Array.isArray(data)) {
+                                $('#city').prop('disabled', false).empty().append('<option value="">-- Select City --</option>');
+                                $('#city').append(data.map(city => `<option value="${city}">${city}</option>`));
+                            } else {
+                                console.error("Unexpected data format for cities:", data);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error fetching cities:", status, error);
+                        }
+                    });
+                } else {
+                    $('#city').prop('disabled', true).empty().append('<option value="">-- Select City --</option>');
+                }
+            });
+
+            // Check pollution levels
+            $('#checkPollutionBtn').click(function () {
+                let city = $('#city').val();
+                let state = $('#state').val();
+                if (city && state) {
+                    $('#result').empty(); // Clear previous results
+                    $('#loading').show(); // Show loading indicator
+                    $.ajax({
+                        url: "/check_pollution",
+                        method: "GET",
+                        data: { city: city, state: state },
+                        success: function (data) {
+                            $('#loading').hide(); // Hide loading indicator
+                            $('#result').html(`
+                                <p>City: ${data.city}</p>
+                                <p>AQI: ${data.aqi}</p>
+                                <p>Dominant Pollutant: ${data.dominant_pollutant}</p>
+                            `);
+                        },
+                        error: function (xhr, status, error) {
+                            $('#loading').hide(); // Hide loading indicator
+                            console.error("Error checking pollution:", status, error);
+                            $('#result').html('<p style="color: red;">Failed to check pollution levels. Please try again later.</p>');
+                        }
+                    });
+                } else {
+                    alert('Please select a state and a city.');
+                }
+            });
+
+            // Plot AQI
+            $('#plotAQIBtn').click(function () {
+                let city = $('#city').val();
+                let state = $('#state').val();
+                if (city && state) {
+                    $('#plotImage').hide(); // Hide previous image
+                    $('#loading').show(); // Show loading indicator
+                    $.ajax({
+                        url: "/plot_aqi",
+                        method: "GET",
+                        data: { city: city, state: state },
+                        success: function (data) {
+                            $('#loading').hide(); // Hide loading indicator
+                            $('#plotImage').attr('src', data.url).show();
+                        },
+                        error: function (xhr, status, error) {
+                            $('#loading').hide(); // Hide loading indicator
+                            console.error("Error plotting AQI:", status, error);
+                            $('#result').html('<p style="color: red;">Failed to plot AQI. Please try again later.</p>');
+                        }
+                    });
+                } else {
+                    alert('Please select a state and a city.');
+                }
+            });
+
+            // Plot Pollutant Levels
+            $('#plotPollutantLevelsBtn').click(function () {
+                let city = $('#city').val();
+                let state = $('#state').val();
+                let pollutant = $('#pollutant').val();
+                if (city && state && pollutant) {
+                    $('#plotImage').hide(); // Hide previous image
+                    $('#loading').show(); // Show loading indicator
+                    $.ajax({
+                        url: "/plot_pollutant_levels",
+                        method: "GET",
+                        data: { city: city, state: state, pollutant: pollutant },
+                        success: function (data) {
+                            $('#loading').hide(); // Hide loading indicator
+                            $('#plotImage').attr('src', data.url).show();
+                        },
+                        error: function (xhr, status, error) {
+                            $('#loading').hide(); // Hide loading indicator
+                            console.error("Error plotting pollutant levels:", status, error);
+                            $('#result').html('<p style="color: red;">Failed to plot pollutant levels. Please try again later.</p>');
+                        }
+                    });
+                } else {
+                    alert('Please select a state, city, and pollutant.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
